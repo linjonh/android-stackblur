@@ -36,7 +36,7 @@ public class MainActivity extends RoboActivity {
 	
 	private StackBlurManager _stackBlurManager;
 	
-	private String IMAGE_TO_ANALYZE = "android_platform_256.png";
+	private String IMAGE_TO_ANALYZE = "nav_header.jpg";
 	
 	private int blurMode;
 	
@@ -45,7 +45,7 @@ public class MainActivity extends RoboActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		_stackBlurManager = new StackBlurManager(getBitmapFromAsset(this, "android_platform_256.png"));
+		_stackBlurManager = new StackBlurManager(getBitmapFromAsset(this, "nav_header.jpg"));
 		
 		_seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			
@@ -73,7 +73,8 @@ public class MainActivity extends RoboActivity {
 					_stackBlurManager = new StackBlurManager(getBitmapFromAsset(getApplicationContext(), IMAGE_TO_ANALYZE));
 					onBlur();
 				} else {
-					IMAGE_TO_ANALYZE = "android_platform_256.png";
+//					IMAGE_TO_ANALYZE = "android_platform_256.png";
+					IMAGE_TO_ANALYZE = "nav_header.jpg";
 					_stackBlurManager = new StackBlurManager(getBitmapFromAsset(getApplicationContext(), IMAGE_TO_ANALYZE));
 					onBlur();
 				}

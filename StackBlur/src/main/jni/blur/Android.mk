@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
  
 include $(CLEAR_VARS)
  
-LOCAL_LDLIBS    := -llog -ljnigraphics
+LOCAL_LDLIBS    := -lm -llog -ljnigraphics
  
 LOCAL_MODULE    := blur
 LOCAL_SRC_FILES := blur.c

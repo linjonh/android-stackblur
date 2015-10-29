@@ -1,42 +1,33 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 apply plugin: 'com.android.library'
 
 
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion '19.1'
+    compileSdkVersion 21
+    buildToolsVersion '22.0.1'
     defaultConfig {
-        renderscriptTargetApi 19
+        minSdkVersion 9
+        targetSdkVersion 23
+        renderscriptTargetApi 18
         renderscriptSupportModeEnabled true
 
 //        ndk{
 //            moduleName 'lib_blur'
 //        }
     }
+    def ndkLibs = [['blur', []]]
+    sourceSets {
+        main {
+            jni.srcDirs = []
+//            jniLibs.srcDirs = ndkLibs.collect { "$buildDir/${it[0]}" }
+        }
+    }
 
-//    sourceSets {
-//        main {
-//            manifest.srcFile 'AndroidManifest.xml'
-//            java.srcDirs = ['src']
-//            resources.srcDirs = ['src']
-//            aidl.srcDirs = ['src']
-//            renderscript.srcDirs = ['src']
-//            res.srcDirs = ['res']
-//            assets.srcDirs = ['assets']
-//        }
-//
-//        // Move the tests to tests/java, tests/res, etc...
-//        instrumentTest.setRoot('tests')
-//
-//        // Move the build types to build-types/<type>
-//        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-//        // This moves them out of them default location under src/<type>/... which would
-//        // conflict with src/ being used by the main source set.
-//        // Adding new build types or product flavors should be accompanied
-//        // by a similar customization.
-//        debug.setRoot('build-types/debug')
-//        release.setRoot('build-types/release')
-//    }
+
+//    ndkLibs.each { lib -> makeNdkTasks lib[0] as String, lib[1] }
+    makeNdkTasks("blur",null)
 }
 
 task nativeLibsToJar(type: Zip, description: 'create a jar archive of the native libs') {
@@ -54,4 +45,69 @@ tasks.withType(JavaCompile) {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+}
+
+def getNdkBuildName() {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        return "ndk-build.cmd"
+    } else {
+        return "ndk-build"
+    }
+}
+/**
+ * getNdkBuildFullPath
+ * @return NDK build tool path
+ */
+def getNdkBuildFullPath() {
+//    // we allow to provide full path to ndk-build tool
+//    if (hasProperty('ndk.command')) {
+//        return property('ndk.command')
+//    }
+//    // or just a path to the containing directory
+//    if (hasProperty('ndk.path')) {
+//        //read 'ndk.path' property defined in project.properties file.
+//        def path = property('ndk.path')
+//        if (!path.endsWith(File.separator)) {
+//            path += File.separator
+//        }
+//        return path + getNdkBuildName()
+//    }
+//    // if none of above is provided, we assume ndk-build is already in $PATH
+//    return getNdkBuildName()
+
+    return "D:/android-ndk-r10d/"+getNdkBuildName();
+}
+
+def makeNdkTasks(String name, Object[] deps) {
+    task "ndk_build_$name"(dependsOn: deps, type: Exec) {
+        inputs.file("src/main/jni/$name")
+//        outputs.dir("src/main/jniLibs/$name")
+        outputs.dir("$buildDir/$name")
+        commandLine getNdkBuildFullPath(),
+                'NDK_PROJECT_PATH=null',
+                'APP_BUILD_SCRIPT=./Android.mk',
+                'NDK_APPLICATION_MK=../Application.mk',
+                'NDK_OUT=' + temporaryDir,
+                "NDK_LIBS_OUT=$buildDir/$name",
+//                "NDK_LIBS_OUT=src/main/jniLibs/$name",
+                '-C', file("src/main/jni/$name").absolutePath,
+                '--jobs', '8'
+    }
+
+    task "ndk_clean_$name"(type: Exec) {
+        ignoreExitValue true
+        commandLine getNdkBuildFullPath(),
+                'NDK_PROJECT_PATH=null',
+                'APP_BUILD_SCRIPT=./Android.mk',
+                'NDK_APPLICATION_MK=../Application.mk',
+                'NDK_OUT=' + temporaryDir,
+                "NDK_LIBS_OUT=$buildDir/$name",
+                '-C', file("src/main/jni/$name").absolutePath,
+                'clean'
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn "ndk_build_$name"
+    }
+    clean.dependsOn "ndk_clean_$name"
 }

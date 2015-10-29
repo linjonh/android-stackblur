@@ -8,7 +8,10 @@ dependencies {
 android {
     compileSdkVersion 19
     buildToolsVersion "19.1"
-
+    defaultConfig{
+        minSdkVersion 9
+        targetSdkVersion 23
+    }
 //    sourceSets {
 //        main {
 //            manifest.srcFile 'AndroidManifest.xml'
