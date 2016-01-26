@@ -1,16 +1,12 @@
 package com.example.stackblurdemo;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import roboguice.activity.RoboActivity;
-import roboguice.inject.InjectView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,9 +18,19 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.enrique.stackblur.StackBlurManager;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import roboguice.activity.RoboActivity;
+import roboguice.inject.InjectView;
 
 public class MainActivity extends RoboActivity {
     
@@ -111,9 +117,25 @@ public class MainActivity extends RoboActivity {
 				Intent intent = new Intent(this, BenchmarkActivity.class);
 				startActivity(intent);
 				return true;
+			case R.id.save:
+				saveImage();
+				return true;
 			default:
 				return false;
 		}
+	}
+
+	private void saveImage() {
+		File dir  = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		File file = new File(dir.getAbsolutePath() + File.separator + "blur.jpg");
+		try {
+			FileOutputStream fos = new FileOutputStream(file);
+			mIntentSaveImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+			Toast.makeText(this,"save success!",Toast.LENGTH_SHORT).show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	private Bitmap getBitmapFromAsset(Context context, String strName) {
@@ -133,19 +155,21 @@ public class MainActivity extends RoboActivity {
 		this.blurMode = mode;
 		onBlur();
 	}
-
+	private Bitmap mIntentSaveImage;
 	private void onBlur() {
 		int radius = _seekBar.getProgress() * 5;
 		switch(blurMode) {
 			case 0:
-				_imageView.setImageBitmap( _stackBlurManager.process(radius) );
+				mIntentSaveImage = _stackBlurManager.process(radius);
+
 				break;
 			case 1:
-				_imageView.setImageBitmap( _stackBlurManager.processNatively(radius) );
+				mIntentSaveImage = _stackBlurManager.processNatively(radius);
 				break;
 			case 2:
-				_imageView.setImageBitmap( _stackBlurManager.processRenderScript(this, radius) );
+				mIntentSaveImage = _stackBlurManager.processRenderScript(this, radius);
 				break;
 		}
+		_imageView.setImageBitmap(mIntentSaveImage);
 	}
 }
